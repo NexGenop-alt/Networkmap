@@ -1,0 +1,38 @@
+services:
+  collector:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: python -m collector.collector --mock --interval 30
+    environment:
+      OPTICAL_DB: /data/optical.db
+    volumes:
+      - optical-data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    environment:
+      OPTICAL_DB: /data/optical.db
+    volumes:
+      - optical-data:/data
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  optical-data:
+

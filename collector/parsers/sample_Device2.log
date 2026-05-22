@@ -1,0 +1,347 @@
+﻿============================================
+Information on port 35 from Device 1
+===========================================
+
+
+
+Device2> show et et 35
++------------------------------------------------- ETTP ------------------------------------------------+
+| KEY                        | VALUE                                                                    |
++----------------------------+--------------------------------------------------------------------------+
+|   Name                     | 35                                                                       |
+|   Description              | Device2.port35 to port35.Device1 										|
+|   Type                     | ettp                                                                     |
+|   Admin Status             | True                                                                     |
+|   Mode                     | auto                                                                     |
+|   Link Flap Detect         | False                                                                    |
+|   Link Flap Count          | 5                                                                        |
+|   Link Flap Detect Time    | 10                                                                       |
+|   Link Flap Hold Time      | 300                                                                      |
+|   Duplex                   | full                                                                     |
+|   Port Speed               | 100Gb                                                                    |
+|   Flow Control             | off                                                                      |
+|   Auto Negotiation         | false                                                                    |
+|   Forward Error Correction | auto                                                                     |
+|   PTP Id                   | 35                                                                       |
+|   ETTP Mode                | standard-ethernet                                                        |
++----------------------------+--------------------------------------------------------------------------+
++----------------------- ETTP STATE -----------------------+
+| KEY                                   | VALUE            |
++---------------------------------------+------------------+
+| Name                                  | 35               |
+|   Oper Status                         | UP               |
+|   Duration Since Last Oper Change     | 64 days, 1:57:42 |
+|   Duplex                              | full             |
+|   Flow Control                        | off              |
+|   Speed Mbps                          | 100000           |
+|   Link Flap State                     | none             |
+|   Ownership                           | data             |
+|   Auto Negotiation                    | false            |
+|   Terminal Loopback Operational State | False            |
+|   Facility Loopback Operational State | False            |
++---------------------------------------+------------------+
++--------------------- ETTP STATISTICS ----------------------+
+| KEY                                 | VALUE                |
++-------------------------------------+----------------------+
+| Name                                | 35                   |
+|                                     |                      |
+|     In Bytes                        | 27238502063392274    |
+|     In Packets                      | 21078765912483       |
+|     In Crc Error Packets            | 5                    |
+|     In Unicast Packets              | 21078763095312       |
+|     In Multicast Packets            | 2817164              |
+|     In Broadcast Packets            | 2                    |
+|     In Undersize Packets            | 0                    |
+|     In Oversize Packets             | 0                    |
+|     In Fragment Packets             | 0                    |
+|     In Jabber Packets               | 0                    |
+|     In Discards Packets             | 0                    |
+|     In Discards Bytes               | 0                    |
+|     In Errors                       | 5                    |
+|     In 64 Octet Packets             | 158038948047         |
+|     In 65 to 127 Octet Packets      | 1313332108131        |
+|     In 128 to 255 Octet Packets     | 444928305157         |
+|     In 256 to 511 Octet Packets     | 343589122842         |
+|     In 512 to 1023 Octet Packets    | 341781864483         |
+|     In 1024 to 1518 Octet Packets   | 13463569363295       |
+|     In 1519 to 2047 Octet Packets   | 5013431433523        |
+|     In 2048 to 4095 Octet Packets   | 17571                |
+|     In 4096 to 9216 Octet Packets   | 94749431             |
+|     In 9217 to 16383 Octet Packets  | 0                    |
+|     Out Bytes                       | 5399541519804688     |
+|     Out Packets                     | 9188057092406        |
+|     Out Unicast Packets             | 9188053186183        |
+|     Out Multicast Packets           | 3906222              |
+|     Out Broadcast Packets           | 1                    |
+|     Out 64 Octet Packets            | 93554762096          |
+|     Out 65 to 127 Octet Packets     | 4580091722555        |
+|     Out 128 to 255 Octet Packets    | 643929106851         |
+|     Out 256 to 511 Octet Packets    | 264877578523         |
+|     Out 512 to 1023 Octet Packets   | 327603695470         |
+|     Out 1024 to 1518 Octet Packets  | 2185591618893        |
+|     Out 1519 to 2047 Octet Packets  | 1092408569342        |
+|     Out 2048 to 4095 Octet Packets  | 1966                 |
+|     Out 4096 to 9216 Octet Packets  | 36709                |
+|     Out 9217 to 16383 Octet Packets | 0                    |
+|     Out Discards                    | 1                    |
+|     Out Discards Bytes              | 58                   |
+|     Out Errors                      | 0                    |
+|     Link Flap Events                | 0                    |
+|     Last Clear Time                 | 2025-08-21T09:51:18Z |
++-------------------------------------+----------------------+
+
+Device2> show x x 35
++------ XCVR DETAILS FOR 35 ------+
+| KEY                 | VALUE     |
++---------------------+-----------+
+| XCVR ID             | 35        |
+| State               |           |
+|   Admin State       | enabled   |
+|   Operational State | up        |
+|   Power State       | automatic |
+|   Actual Mode       | 100GE     |
+|   XCVR HW State     | ready     |
+| Properties          |           |
+|   Type              | QSFP28    |
+|   Mode              | auto      |
++---------------------+-----------+
++------------------------- XCVR VENDOR-DATA FOR 35 -------------------------+
+| KEY                               | VALUE                                 |
++-----------------------------------+---------------------------------------+
+| Vendor Data                       |                                       |
+|   ID                              |                                       |
+|     Vendor ID                     |                                       |
+|       Vendor Name                 | 		                                |
+|       Vendor PN                   | XCVR-Q10V01                           |
+|       Vendor Revision             | A                                     |
+|       Vendor Serial Number        | A12342678ABC                          |
+|       Vendor Mfg Date             | 07/26/21                              |
+|   Vendor Properties               |                                       |
+|     Device ID                     |                                       |
+|       Identifier                  | QSFP28 SFF-8636                       |
+|       Identifier Description      | QSFP28 transceiver                    |
+|       Extended Identifier         | unknown                               |
+|       Connection Type             | LC                                    |
+|       Vendor CLEI                 | IPUIBY6TAA                            |
+|     Transmitter                   |                                       |
+|       Encoding Type               | NRZ                                   |
+|       Encoding                    | 0x03                                  |
+|       Max Reach                   | 10km                                  |
+|     Diagnostic Monitoring         |                                       |
+|       Rx power                    | average-power                         |
+|       Tx power                    | yes                                   |
+|       Diagnostics Monitoring      | True                                  |
+|     Options                       |                                       |
+|       Tx Input Auto Adaptive      | False                                 |
+|       Tx Input Fixed Programmable | False                                 |
+|       Rx Output Emphasis          | False                                 |
+|       Rx Output Amplitude         | False                                 |
+|       Tx CDR LOL Flag             | True                                  |
+|       Rx CDR LOL Flag             | True                                  |
+|       Memory Page 0x1             | True                                  |
+|       Memory Page 0x2             | True                                  |
+|     Device Technology             |                                       |
+|       Transmitter Tunable         | False                                 |
+|     Transmitter Technology        | -                                     |
+|     Transceiver Code              |                                       |
+|       Specification Compliance    | Extended-Spec-Compliance-100GBASE-LR4 |
++-----------------------------------+---------------------------------------+
++-------- XCVR DIAGNOSTICS FOR 35 ---------+
+| KEY                              | VALUE |
++----------------------------------+-------+
+| XCVR ID                          | 35    |
+| Properties                       |       |
+|   Diagnostics                    |       |
+|     Device                       |       |
+|       Temperature (deg C)        |       |
+|         Current                  | 38    |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 90    |
+|           Low Alarm Threshold    | -45   |
+|           High Warning Threshold | 85    |
+|           Low Warning Threshold  | -40   |
+|       Voltage (V)                |       |
+|         Current                  | 3.41  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 3.63  |
+|           Low Alarm Threshold    | 3.04  |
+|           High Warning Threshold | 3.46  |
+|           Low Warning Threshold  | 3.13  |
+|       Power Consumption (W)      |       |
+|         Current                  | 2.9   |
+|     Lane                         |       |
+|       Lane Number                | 1     |
+|       Rx Power (dBm)             |       |
+|         Current                  | -2.5  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -13.6 |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -10.6 |
+|       Tx Power (dBm)             |       |
+|         Current                  | 2.1   |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -7.3  |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -4.3  |
+|       Tx Laser Bias (mA)         |       |
+|         Current                  | 48.4  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 100.0 |
+|           Low Alarm Threshold    | 25.0  |
+|           High Warning Threshold | 90.0  |
+|           Low Warning Threshold  | 35.0  |
+|       Laser Temperature (dBm)    |       |
+|         Status                   | -     |
+|         Threshold                | -     |
+|                                  |       |
+|       Lane Number                | 2     |
+|       Rx Power (dBm)             |       |
+|         Current                  | -2.3  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -13.6 |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -10.6 |
+|       Tx Power (dBm)             |       |
+|         Current                  | 2.1   |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -7.3  |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -4.3  |
+|       Tx Laser Bias (mA)         |       |
+|         Current                  | 48.4  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 100.0 |
+|           Low Alarm Threshold    | 25.0  |
+|           High Warning Threshold | 90.0  |
+|           Low Warning Threshold  | 35.0  |
+|       Laser Temperature (dBm)    |       |
+|         Status                   | -     |
+|         Threshold                | -     |
+|                                  |       |
+|       Lane Number                | 3     |
+|       Rx Power (dBm)             |       |
+|         Current                  | -2.1  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -13.6 |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -10.6 |
+|       Tx Power (dBm)             |       |
+|         Current                  | 2.0   |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -7.3  |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -4.3  |
+|       Tx Laser Bias (mA)         |       |
+|         Current                  | 48.9  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 100.0 |
+|           Low Alarm Threshold    | 25.0  |
+|           High Warning Threshold | 90.0  |
+|           Low Warning Threshold  | 35.0  |
+|       Laser Temperature (dBm)    |       |
+|         Status                   | -     |
+|         Threshold                | -     |
+|                                  |       |
+|       Lane Number                | 4     |
+|       Rx Power (dBm)             |       |
+|         Current                  | -1.9  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -13.6 |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -10.6 |
+|       Tx Power (dBm)             |       |
+|         Current                  | 2.2   |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 5.5   |
+|           Low Alarm Threshold    | -7.3  |
+|           High Warning Threshold | 4.5   |
+|           Low Warning Threshold  | -4.3  |
+|       Tx Laser Bias (mA)         |       |
+|         Current                  | 48.9  |
+|         Status                   |       |
+|           High Alarm Status      | False |
+|           Low Alarm Status       | False |
+|           High Warning Status    | False |
+|           Low Warning Status     | False |
+|         Threshold                |       |
+|           High Alarm Threshold   | 100.0 |
+|           Low Alarm Threshold    | 25.0  |
+|           High Warning Threshold | 90.0  |
+|           Low Warning Threshold  | 35.0  |
+|       Laser Temperature (dBm)    |       |
+|         Status                   | -     |
+|         Threshold                | -     |
++----------------------------------+-------+
+

@@ -1,0 +1,12 @@
+nodes:
+  - id: SCR
+    name: Scranton LightEdge
+    host: 10.44.x.22
+    username: "${SSH_USER}"
+    ports: ["1/2", "2/1", "2/2"]
+  - id: FOMC
+    name: 4MC MileOfCars
+    host: 10.44.x.29
+    username: "${SSH_USER}"
+    ports: ["35", "36"]
+
