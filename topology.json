@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "title": "Wyyerd Pacific IP Backbone",
+    "subtitle": "Ciena Router View",
+    "version": "Feb 2026 — CoreSite LA2 addition (2)",
+    "core_prefix": "38.44.223.x",
+    "mgmt_prefix": "10.44.x.0/24",
+    "source": "bit.ly/wyyerd-ca-ip-bb"
+  },
+  "thresholds": {
+    "healthy_above": -15.0,
+    "warning_above": -25.0,
+    "critical_below": -25.0,
+    "note": "Adjust per optic type. PKT-200-S and 100G-LR have different RX sensitivity floors."
+  },
+  "nodes": [
+    { "id": "INTERNET", "name": "Internet", "type": "cloud", "x": 120, "y": 205, "details": "Hurricane Electric AS 6939, Lumen AS 3356, Zayo AS 6461" },
+    { "id": "CORE_LA2", "name": "CoreSite LA2", "clli": "LSANCAVJ", "suffix": ".37/.252", "x": 470, "y": 110, "equipment": "2x100G LAG upstream", "tier": "core" },
+    { "id": "JNPR_LA", "name": "JNPR MX304", "clli": "Cust:3-VXGCTF3HLV", "suffix": ".2/.255", "x": 295, "y": 280, "equipment": "MX304 100G-LR", "tier": "peering" },
+    { "id": "SCR", "name": "Scranton LightEdge", "clli": "SNDGCAJW", "suffix": ".22", "x": 470, "y": 285, "equipment": "PKT-200-S", "tier": "core" },
+    { "id": "SDG01", "name": "SDG01 EdgeConneX", "clli": "SNDJCA13", "suffix": ".38/.253", "x": 890, "y": 325, "equipment": "2x100G", "tier": "core" },
+    { "id": "JNPR_SDG", "name": "JNPR MX304", "clli": "SNDJCA13", "suffix": ".3", "x": 1090, "y": 325, "equipment": "MX304, NetSkrt AS53471", "tier": "peering" },
+    { "id": "SCL", "name": "Scale KearnyVilla", "clli": "SNDACAWA", "suffix": ".21/.254", "x": 470, "y": 485, "equipment": "PKT-200-S, JNPR MX304 (.1)", "tier": "core" },
+    { "id": "BSTST", "name": "525-B-St", "clli": "SNDGCA52", "suffix": "", "x": 465, "y": 625, "equipment": "sub-node of Scale", "tier": "access" },
+    { "id": "LKS", "name": "LKS Lakeside", "clli": "LAKECA01", "suffix": ".36", "x": 1120, "y": 560, "equipment": "100G-ZR", "tier": "distribution" },
+    { "id": "MTS", "name": "MTS 12-S-13th", "clli": "SNDGCA13", "suffix": ".27", "x": 365, "y": 755, "equipment": "PKT-200-S", "tier": "distribution" },
+    { "id": "LND", "name": "LND El Cajon", "clli": "ELCJCALA", "suffix": ".31", "x": 990, "y": 780, "equipment": "100G-ZR, Crown 2024", "tier": "distribution" },
+    { "id": "FOMC", "name": "4MC MileOfCars", "clli": "NTCYCA4M", "suffix": ".29/.30", "x": 650, "y": 900, "equipment": "PKT-200-L, .202/.203", "tier": "distribution" },
+    { "id": "GST", "name": "GST G-Street", "clli": "CHULCAG1", "suffix": ".23", "x": 735, "y": 1085, "equipment": "PKT-200-S", "tier": "distribution" },
+    { "id": "TNP", "name": "3NP Naples", "clli": "CHULCAN1", "suffix": ".24", "x": 930, "y": 1085, "equipment": "PKT-200-S", "tier": "access" },
+    { "id": "PLD", "name": "PLD P.Ladera", "clli": "CHULCAPL", "suffix": ".28", "x": 1125, "y": 1085, "equipment": "100G-LR", "tier": "access" },
+    { "id": "BNA", "name": "BNA Bonita", "clli": "BNTACAOL", "suffix": ".33", "x": 1280, "y": 900, "equipment": "100G-LR, north/south split", "tier": "distribution" },
+    { "id": "SRA", "name": "SRA SantaRosa", "clli": "OTAYCA01", "suffix": ".25", "x": 1370, "y": 1085, "equipment": "100G-LR", "tier": "access" },
+    { "id": "HUT", "name": "HUT Hunte", "clli": "WWLKCA01", "suffix": ".26", "x": 1600, "y": 1085, "equipment": "100G-LR", "tier": "access" },
+    { "id": "IMC", "name": "IMC Imperial", "clli": "IMBHCAEL", "suffix": ".32", "x": 610, "y": 1245, "equipment": "PKT-200-S", "tier": "access" },
+    { "id": "MAX", "name": "MAX Maxwell", "clli": "MAXWCAMA", "suffix": ".34", "x": 1160, "y": 1245, "equipment": "PKT-200-S", "tier": "access" }
+  ],
+  "links": [
+    { "id": "INTERNET-CORE_LA2", "from": "INTERNET", "to": "CORE_LA2", "speed": "2x100G", "type": "lag", "color": "black-double", "transport": "Hurricane Electric AS 6939" },
+    { "id": "CORE_LA2-JNPR_LA", "from": "CORE_LA2", "to": "JNPR_LA", "speed": "2x100G", "type": "lag", "color": "black-double", "transport": "Lumen peering" },
+    { "id": "CORE_LA2-SCR", "from": "CORE_LA2", "to": "SCR", "speed": "100G", "type": "standard", "color": "black", "transport": "Lumen Waves 448673486/448620148", "ports": { "from": "p35/p36 p34 .185", "to": "p3/p4 .185" } },
+    { "id": "SCR-SDG01", "from": "SCR", "to": "SDG01", "speed": "100G", "type": "standard", "color": "black", "transport": "PKT-200-S", "ports": { "from": "p1/2 .187", "to": "p1/2 .187" } },
+    { "id": "SCR-SCL", "from": "SCR", "to": "SCL", "speed": "100G", "type": "standard", "color": "black", "transport": "PKT-200-S/L", "ports": { "from": "p2/2 .230 PKT-200-L", "to": "p2/1 .227 PKT-200-S" } },
+    { "id": "SDG01-JNPR_SDG", "from": "SDG01", "to": "JNPR_SDG", "speed": "100G", "type": "standard", "color": "black", "ports": { "from": "p1/p2 0/18 .199/.198", "to": "0/0 .168" } },
+    { "id": "SCL-SDG01", "from": "SCL", "to": "SDG01", "speed": "100G", "type": "standard", "color": "black", "transport": "PKT-200-S", "ports": { "from": "p1/1 .189", "to": "p1/1 .188" } },
+    { "id": "SCL-LKS", "from": "SCL", "to": "LKS", "speed": "100G-ZR", "type": "zr", "color": "brown", "transport": "Zayo (2025) FBDK/2555016/ZFS", "ports": { "from": "p3 .183", "to": "100G-ZR p93" } },
+    { "id": "SCL-LND", "from": "SCL", "to": "LND", "speed": "100G-ZR", "type": "zr", "color": "brown", "transport": "Zayo (2024) FBDK/2244079/ZFS", "ports": { "from": "p5 .204", "to": "100G-ZR" } },
+    { "id": "SCL-MTS", "from": "SCL", "to": "MTS", "speed": "100G", "type": "standard", "color": "orange", "transport": "PKT-200-S", "ports": { "from": "p2/1 .226", "to": "p34" } },
+    { "id": "SCL-FOMC", "from": "SCL", "to": "FOMC", "speed": "100G-ZR", "type": "zr", "color": "brown", "transport": "Crown 363-1-DFBR-CCF", "ports": { "from": "p34 .201", "to": "" } },
+    { "id": "MTS-FOMC", "from": "MTS", "to": "FOMC", "speed": "100G", "type": "standard", "color": "orange", "transport": "PKT-200-L", "ports": { "from": "p35 .201", "to": "2p35 .206" } },
+    { "id": "FOMC-LND", "from": "FOMC", "to": "LND", "speed": "100G-ZR", "type": "zr", "color": "brown", "transport": "Crown (2024) 343562-DFBR-CCF", "ports": { "from": "p35 .207", "to": ".205 p36" } },
+    { "id": "FOMC-GST", "from": "FOMC", "to": "GST", "speed": "100G", "type": "standard", "color": "black", "transport": "PKT-200-S/L", "ports": { "from": "1p36 .220", "to": ".221 p36" } },
+    { "id": "LND-LKS", "from": "LND", "to": "LKS", "speed": "100G", "type": "standard", "color": "black", "transport": "100G-LR", "ports": { "from": "p34 .180/.181", "to": "p34" } },
+    { "id": "LND-BNA", "from": "LND", "to": "BNA", "speed": "100G-ZR", "type": "zr", "color": "green-dashed", "transport": "Wyyerd-Crown (2025) 343563-DFBR-CCF", "ports": { "from": "p35 .207", "to": "" } },
+    { "id": "GST-TNP", "from": "GST", "to": "TNP", "speed": "100G", "type": "standard", "color": "blue", "transport": "PKT-200-S/L", "ports": { "from": ".222/.223", "to": "PKT-200-L .231 p34" } },
+    { "id": "GST-IMC", "from": "GST", "to": "IMC", "speed": "100G", "type": "standard", "color": "red", "transport": "PKT-200-S", "ports": { "from": ".209 p35", "to": "p35" } },
+    { "id": "TNP-PLD", "from": "TNP", "to": "PLD", "speed": "100G", "type": "standard", "color": "blue", "transport": "100G-LR", "ports": { "from": "p36 .232", "to": "p36 .233" } },
+    { "id": "PLD-BNA", "from": "PLD", "to": "BNA", "speed": "100G", "type": "standard", "color": "blue", "transport": "100G-LR", "ports": { "from": "p33", "to": "p34 .214/.215" } },
+    { "id": "BNA-SRA", "from": "BNA", "to": "SRA", "speed": "100G", "type": "standard", "color": "blue", "transport": "100G-LR", "ports": { "from": "p33/p36 south", "to": "p34 .234" } },
+    { "id": "SRA-HUT", "from": "SRA", "to": "HUT", "speed": "100G", "type": "standard", "color": "blue", "transport": "100G-LR", "ports": { "from": "p35 .236", "to": "p34 .237" } },
+    { "id": "IMC-MAX", "from": "IMC", "to": "MAX", "speed": "100G", "type": "standard", "color": "red", "transport": "PKT-200-S, Crown (2024) 348101/348103-DFBR-CCF", "ports": { "from": ".210 p34", "to": "p34 .211" } }
+  ]
+}
