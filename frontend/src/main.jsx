@@ -61,6 +61,22 @@ function App() {
   const counts = health?.summary || { nodes: 0, links: 0, healthy: 0, warning: 0, critical: 0, unknown: 0 };
   const lastRefresh = asOfIso ? health?.latest_reading_at : health?.latest_reading_at || health?.collector?.last_poll || "";
   const criticalLinks = useMemo(() => links.filter((link) => link.health === "critical"), [links]);
+
+  // Build a lookup: "NodeId_portNum" → { remoteNode, remotePort }
+  // Uses positional pairing of from/to port lists so p35→p34, p36→p36, etc.
+  const portConnections = useMemo(() => {
+    const map = {};
+    for (const link of links) {
+      const fromPorts = parsePortList(link.ports?.from || "");
+      const toPorts = parsePortList(link.ports?.to || "");
+      const count = Math.min(fromPorts.length, toPorts.length);
+      for (let i = 0; i < count; i++) {
+        map[`${link.from}_${fromPorts[i]}`] = { remoteNode: link.to, remotePort: toPorts[i] };
+        map[`${link.to}_${toPorts[i]}`] = { remoteNode: link.from, remotePort: fromPorts[i] };
+      }
+    }
+    return map;
+  }, [links]);
   const selectedNodes = selectedIds
     .map((id) => nodes.find((node) => node.id === id))
     .filter(Boolean);
@@ -79,7 +95,7 @@ function App() {
         <div className="flex min-w-0 items-center gap-4">
           <div className="min-w-0">
             <h1 className="truncate text-xl font-semibold tracking-normal text-white">
-              Wyyerd Pacific IP Backbone — Live Optical Monitor
+              Cabinet Router Topology — Live Optical Monitor
             </h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
               <span className="inline-flex items-center gap-1"><Clock size={14} /> {asOfIso ? `Snapshot: ${lastRefresh ? formatTime(lastRefresh) : "No readings before selected date"}` : formatTime(lastRefresh)}</span>
@@ -113,6 +129,7 @@ function App() {
             details={selectedDetails}
             selectedNodes={selectedNodes}
             criticalLinks={criticalLinks}
+            portConnections={portConnections}
             onClearNode={(id) => setSelectedIds((ids) => ids.filter((item) => item !== id))}
             onClearAll={() => setSelectedIds([])}
           />
@@ -168,7 +185,7 @@ function Metric({ icon: Icon, label, value, tone = "neutral" }) {
   );
 }
 
-function NodePanel({ details, selectedNodes, criticalLinks, onClearNode, onClearAll }) {
+function NodePanel({ details, selectedNodes, criticalLinks, portConnections, onClearNode, onClearAll }) {
   if (!selectedNodes.length) {
     return (
       <div>
@@ -225,7 +242,7 @@ function NodePanel({ details, selectedNodes, criticalLinks, onClearNode, onClear
             </div>
             <div className="mt-2 text-sm leading-5 text-slate-400">{node.equipment || node.details}</div>
             <div className="mt-4 space-y-3">
-              {ports.map((port) => <PortCard key={`${port.node_id}-${port.port}`} port={port} />)}
+              {ports.map((port) => <PortCard key={`${port.node_id}-${port.port}`} port={port} portConnections={portConnections} />)}
             </div>
           </section>
         );
@@ -234,12 +251,20 @@ function NodePanel({ details, selectedNodes, criticalLinks, onClearNode, onClear
   );
 }
 
-function PortCard({ port }) {
+function PortCard({ port, portConnections }) {
+  const conn = portConnections?.[`${port.node_id}_${port.port}`];
   return (
     <article className="rounded-md border border-white/10 bg-white/[0.035] p-3">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <div className="font-mono text-sm font-semibold text-white">Port {port.port}</div>
+          <div className="font-mono text-sm font-semibold text-white">
+            Port {port.port}
+            {conn && (
+              <span className="ml-2 font-normal text-slate-400">
+                → p{conn.remotePort} <span className="text-sky-400">{conn.remoteNode}</span>
+              </span>
+            )}
+          </div>
           <div className="mt-1 text-xs text-slate-500">{port.spec_compliance || port.port_speed || "optic"}</div>
         </div>
         <span className={`status-pill ${port.health}`}>{port.health}</span>
@@ -271,6 +296,14 @@ function Reading({ label, value }) {
       <div className="font-mono text-slate-100">{value}</div>
     </div>
   );
+}
+
+// Parse a port string like "p33/p34", "p35 p36", "2p35" into ["33", "34"]
+function parsePortList(str) {
+  return str
+    .split(/[\s/]+/)
+    .map((t) => t.trim().replace(/^\d*p/i, ""))
+    .filter((t) => /^\d+$/.test(t));
 }
 
 function fmtDbm(value) {

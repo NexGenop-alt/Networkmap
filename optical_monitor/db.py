@@ -119,6 +119,10 @@ def init_db(path: Path | None = None) -> None:
 
 def seed_topology(conn: sqlite3.Connection) -> None:
     topology = load_topology()
+    node_ids = [node["id"] for node in topology["nodes"]]
+    link_ids = [link["id"] for link in topology["links"]]
+
+    # 1. Insert or update all nodes first to satisfy foreign key constraints for new/updated links
     conn.executemany(
         """
         INSERT INTO nodes (id, name, clli, mgmt_suffix, svg_x, svg_y, equipment, tier, node_type)
@@ -143,6 +147,8 @@ def seed_topology(conn: sqlite3.Connection) -> None:
             for node in topology["nodes"]
         ],
     )
+
+    # 2. Insert or update all links next (this updates foreign key references from old node IDs to new ones)
     conn.executemany(
         """
         INSERT INTO links (id, from_node, to_node, speed, fiber_type, color, transport, from_port, to_port)
@@ -167,6 +173,20 @@ def seed_topology(conn: sqlite3.Connection) -> None:
             for link in topology["links"]
         ],
     )
+
+    # 3. Clean up obsolete links
+    if link_ids:
+        placeholders = ",".join("?" for _ in link_ids)
+        conn.execute(f"DELETE FROM links WHERE id NOT IN ({placeholders})", link_ids)
+    else:
+        conn.execute("DELETE FROM links")
+
+    # 4. Clean up obsolete nodes (safe now because links referencing them have been deleted or updated)
+    if node_ids:
+        placeholders = ",".join("?" for _ in node_ids)
+        conn.execute(f"DELETE FROM nodes WHERE id NOT IN ({placeholders})", node_ids)
+    else:
+        conn.execute("DELETE FROM nodes")
 
 
 def insert_port_reading(

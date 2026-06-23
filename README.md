@@ -10,7 +10,7 @@ The project includes:
 - React/Vite frontend with SVG topology map, multi-node selection, and date rewind controls.
 - Docker Compose deployment files.
 
-## Run Locally
+## Run Locally First time setup
 
 ```bash
 python3 -m venv .venv
@@ -34,4 +34,24 @@ Open `http://127.0.0.1:3000/`.
 
 ```bash
 docker compose up --build
+```
+
+
+
+
+
+
+
+## Run Locally when already set up
+
+```bash
+. .venv/bin/activate
+python -m uvicorn api.main:app --reload --port 8000
+```
+
+In another terminal:
+
+```bash
+cd frontend
+npm run dev
 ```

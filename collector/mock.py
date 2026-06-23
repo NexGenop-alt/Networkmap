@@ -22,7 +22,7 @@ def generate_mock_readings() -> list[tuple[str, PortReading]]:
     ]
     readings: list[tuple[str, PortReading]] = []
     degraded = {"LND": -11.4, "BNA": -12.1, "IMC": -14.2, "MAX": -14.7}
-    noisy = {"SCR", "FOMC", "GST", "BNA"}
+    noisy = {"SCR", "4MC", "GST", "BNA"}
 
     for node_id, ports in node_ports().items():
         for index, port in enumerate(ports[:4]):
