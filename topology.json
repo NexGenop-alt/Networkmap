@@ -1,11 +1,8 @@
 {
   "meta": {
     "title": "Cabinet Router Topology",
-    "subtitle": "Ciena Router View",
-    "version": "Jun 2026",
-    "core_prefix": "38.44.223.x",
-    "mgmt_prefix": "10.44.x.0/24",
-    "source": "bit.ly/wyyerd-ca-ip-bb"
+    "subtitle": "Cabinet Router View",
+    "version": "Jun 2026"
   },
   "thresholds": {
     "healthy_above": -15.0,
@@ -221,8 +218,8 @@
       "color": "black-double",
       "transport": "Hurricane Electric AS 6939",
       "ports": {
-        "from": "p35/p36",
-        "to": "p35/p36"
+        "from": "p35 p36",
+        "to": "p35 p36"
       }
     },
     {
@@ -282,8 +279,8 @@
       "type": "lag",
       "color": "purple-double",
       "ports": {
-        "from": "p33/p34",
-        "to": "p44/p45"
+        "from": "p33 p34",
+        "to": "p44 p45"
       }
     },
     {
@@ -438,8 +435,8 @@
       "type": "lag",
       "color": "blue-double",
       "ports": {
-        "from": "p35/p36",
-        "to": "p35/p36"
+        "from": "p35 p36",
+        "to": "p35 p36"
       }
     },
     {
@@ -450,8 +447,8 @@
       "type": "lag",
       "color": "blue-double",
       "ports": {
-        "from": "p33/p34",
-        "to": "p33/p34"
+        "from": "p33 p34",
+        "to": "p33 p34"
       }
     },
     {
@@ -462,8 +459,8 @@
       "type": "lag",
       "color": "blue-double",
       "ports": {
-        "from": "p35/p36",
-        "to": "p34/p36"
+        "from": "p35 p36",
+        "to": "p34 p36"
       }
     },
     {
@@ -474,8 +471,8 @@
       "type": "lag",
       "color": "blue-double",
       "ports": {
-        "from": "p33/p35",
-        "to": "p33/p34"
+        "from": "p33 p35",
+        "to": "p33 p34"
       }
     },
     {
@@ -498,8 +495,8 @@
       "type": "lag",
       "color": "blue-double",
       "ports": {
-        "from": "p35/p36",
-        "to": "p35/p36"
+        "from": "p35 p36",
+        "to": "p35 p36"
       }
     }
   ]

@@ -36,29 +36,65 @@ def topology() -> dict[str, Any]:
 def nodes(at: Optional[str] = None) -> list[dict[str, Any]]:
     topo = load_topology()
     latest = latest_aggregates(at)
-    return [
-        node | {
-            "ports": list(latest.get(node["id"], {}).values()),
-            "health": node_health(list(latest.get(node["id"], {}).values())),
-        }
-        for node in topo["nodes"]
-    ]
+    
+    active_ports: dict[str, set[str]] = {}
+    for link in topo["links"]:
+        for direction in ["from", "to"]:
+            node_id = link[direction]
+            port_str = link.get("ports", {}).get(direction, "")
+            # Default split() handles your spaces perfectly!
+            for token in port_str.split():
+                clean_port = token.strip().replace("p", "")
+                if clean_port:
+                    active_ports.setdefault(node_id, set()).add(clean_port)
+
+    result = []
+    for node in topo["nodes"]:
+        node_id = node["id"]
+        allowed_ports = active_ports.get(node_id, set())
+        
+        all_node_readings = list(latest.get(node_id, {}).values())
+        filtered_ports = [
+            r for r in all_node_readings 
+            if str(r["port"]).replace("p", "") in allowed_ports
+        ]
+        
+        result.append(node | {
+            "ports": filtered_ports,
+            "health": node_health(filtered_ports),
+        })
+    return result
 
 
 @app.get("/api/nodes/{node_id}")
 def node_detail(node_id: str, at: Optional[str] = None) -> dict[str, Any]:
     topo = load_topology()
     node = next((item for item in topo["nodes"] if item["id"] == node_id), None)
-    ports = latest_aggregates(at).get(node_id, {})
+    
+    allowed_ports = set()
+    for link in topo["links"]:
+        if link["from"] == node_id:
+            for token in link.get("ports", {}).get("from", "").split():
+                allowed_ports.add(token.strip().replace("p", ""))
+        elif link["to"] == node_id:
+            for token in link.get("ports", {}).get("to", "").split():
+                allowed_ports.add(token.strip().replace("p", ""))
+                
+    ports_map = latest_aggregates(at).get(node_id, {})
     lanes = latest_lanes(node_id, at)
+    
+    filtered_ports = [
+        port for port in ports_map.values()
+        if str(port["port"]).replace("p", "") in allowed_ports
+    ]
+    
     return {
         "node": node,
         "ports": [
             port | {"lanes": lanes.get(port["port"], [])}
-            for port in ports.values()
+            for port in filtered_ports
         ],
     }
-
 
 @app.get("/api/nodes/{node_id}/history")
 def node_history(node_id: str, hours: int = 24) -> dict[str, Any]:

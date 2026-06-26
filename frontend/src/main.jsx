@@ -226,7 +226,15 @@ function NodePanel({ details, selectedNodes, criticalLinks, portConnections, onC
       </div>
       {selectedNodes.map((node) => {
         const detail = details[node.id];
-        const ports = detail?.ports || node.ports || [];
+        const rawPorts = detail?.ports || node.ports || [];
+
+        // Force numerical sorting instead of string sorting
+        const sortedPorts = [...rawPorts].sort((a, b) => {
+          const numA = parseInt(String(a.port).replace(/\D/g, ""), 10);
+          const numB = parseInt(String(b.port).replace(/\D/g, ""), 10);
+          return numA - numB;
+        });
+
         return (
           <section key={node.id} className="rounded-md border border-white/10 bg-white/[0.025] p-3">
             <div className="flex items-start justify-between gap-3">
@@ -242,7 +250,8 @@ function NodePanel({ details, selectedNodes, criticalLinks, portConnections, onC
             </div>
             <div className="mt-2 text-sm leading-5 text-slate-400">{node.equipment || node.details}</div>
             <div className="mt-4 space-y-3">
-              {ports.map((port) => <PortCard key={`${port.node_id}-${port.port}`} port={port} portConnections={portConnections} />)}
+              {/* Using sortedPorts here instead of ports */}
+              {sortedPorts.map((port) => <PortCard key={`${port.node_id}-${port.port}`} port={port} portConnections={portConnections} />)}
             </div>
           </section>
         );

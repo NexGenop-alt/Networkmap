@@ -25,7 +25,7 @@ def generate_mock_readings() -> list[tuple[str, PortReading]]:
     noisy = {"SCR", "4MC", "GST", "BNA"}
 
     for node_id, ports in node_ports().items():
-        for index, port in enumerate(ports[:4]):
+        for index, port in enumerate(ports):
             reading = copy.deepcopy(base[(hash(node_id + port) + index) % len(base)])
             reading.port_number = port
             reading.description = f"{node_id} {port} optical monitor"
