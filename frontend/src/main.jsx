@@ -262,19 +262,66 @@ function NodePanel({ details, selectedNodes, criticalLinks, portConnections, onC
 
 function PortCard({ port, portConnections }) {
   const conn = portConnections?.[`${port.node_id}_${port.port}`];
+  // Quick dictionary to alias node IDs for a cleaner UI
+  const aliases = {
+    "SDG01": "EdgConneX",
+    "CORE_LA2": "CoreSite",
+    "JNPR_SNDGCAJW": "JW_MX304",
+    "JNPR_SNDACAWA": "WA_MX304",
+    "JNPR_SDG": "ECX_MX304",
+    "SCR": "Scranton",
+    "SCL": "Scale"
+    // Add more here later if needed, e.g., "CORE_LA2": "LA2"
+  };
   return (
     <article className="rounded-md border border-white/10 bg-white/[0.035] p-3">
       <div className="flex items-center justify-between gap-2">
         <div>
           <div className="font-mono text-sm font-semibold text-white">
             Port {port.port}
-            {conn && (
-              <span className="ml-2 font-normal text-slate-400">
-                → p{conn.remotePort} <span className="text-sky-400">{conn.remoteNode}</span>
-              </span>
-            )}
+            {conn && (() => {
+              const match = String(conn.remotePort).match(/^(\d+)p(.+)$/);
+              let dispPort = conn.remotePort.startsWith("p") || conn.remotePort.includes("/") ? conn.remotePort : `p${conn.remotePort}`;
+              let dispNode = aliases[conn.remoteNode] || conn.remoteNode;
+              if (match) {
+                dispPort = `p${match[2]}`;
+                dispNode = `${aliases[conn.remoteNode] || conn.remoteNode}-00${match[1]}`;
+              }
+              return (
+                <span className="ml-2 font-normal text-slate-400">
+                  → {dispPort} <span className="text-sky-400">{dispNode}</span>
+                </span>
+              );
+            })()}
           </div>
-          <div className="mt-1 text-xs text-slate-500">{port.spec_compliance || port.port_speed || "optic"}</div>
+          <div className="mt-1 text-xs text-slate-500 flex flex-wrap items-center gap-x-1.5">
+            {(() => {
+              const items = [];
+              if (port.temperature_c !== undefined && port.temperature_c !== null) {
+                items.push(<span key="temp">Temp: <span className="text-slate-300">{port.temperature_c}°C</span></span>);
+              }
+              if (port.voltage_v !== undefined && port.voltage_v !== null) {
+                items.push(<span key="volt">Volt: <span className="text-slate-300">{port.voltage_v}V</span></span>);
+              }
+              if (port.port_speed) {
+                items.push(<span key="speed">Speed: <span className="text-slate-300">{port.port_speed}</span></span>);
+              }
+              if (port.uptime) {
+                items.push(
+                  <span key="uptime">
+                    Uptime: <span className="text-green-400 font-medium">{port.uptime}</span>
+                  </span>
+                );
+              }
+              if (port.vendor_pn) {
+                items.push(<span key="pn">PN: <span className="text-slate-300">{port.vendor_pn}</span></span>);
+              }
+              return items.reduce((acc, x, i) => {
+                if (i === 0) return [x];
+                return [...acc, <span key={`sep-${i}`} className="text-slate-600">|</span>, x];
+              }, []);
+            })()}
+          </div>
         </div>
         <span className={`status-pill ${port.health}`}>{port.health}</span>
       </div>
@@ -307,12 +354,18 @@ function Reading({ label, value }) {
   );
 }
 
-// Parse a port string like "p33/p34", "p35 p36", "2p35" into ["33", "34"]
+// Parse a port string like "p33/p34", "p35 p36", "2p35" into ["33", "34", "2p35"]
 function parsePortList(str) {
   return str
-    .split(/[\s/]+/)
-    .map((t) => t.trim().replace(/^\d*p/i, ""))
-    .filter((t) => /^\d+$/.test(t));
+    .split(/\s+/)
+    .map((t) => {
+      const trimmed = t.trim();
+      if (/^\d+p/i.test(trimmed)) {
+        return trimmed.toLowerCase();
+      }
+      return trimmed.replace(/^p/i, "");
+    })
+    .filter((t) => t.length > 0);
 }
 
 function fmtDbm(value) {

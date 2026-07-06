@@ -32,6 +32,14 @@ def topology() -> dict[str, Any]:
     return load_topology()
 
 
+def normalize_port(port: str) -> str:
+    import re
+    p = port.strip()
+    if re.match(r'^\d+p', p, re.I):
+        return p.lower()
+    return re.sub(r'^p', '', p, flags=re.I)
+
+
 @app.get("/api/nodes")
 def nodes(at: Optional[str] = None) -> list[dict[str, Any]]:
     topo = load_topology()
@@ -44,7 +52,7 @@ def nodes(at: Optional[str] = None) -> list[dict[str, Any]]:
             port_str = link.get("ports", {}).get(direction, "")
             # Default split() handles your spaces perfectly!
             for token in port_str.split():
-                clean_port = token.strip().replace("p", "")
+                clean_port = normalize_port(token)
                 if clean_port:
                     active_ports.setdefault(node_id, set()).add(clean_port)
 
@@ -56,7 +64,7 @@ def nodes(at: Optional[str] = None) -> list[dict[str, Any]]:
         all_node_readings = list(latest.get(node_id, {}).values())
         filtered_ports = [
             r for r in all_node_readings 
-            if str(r["port"]).replace("p", "") in allowed_ports
+            if normalize_port(r["port"]) in allowed_ports
         ]
         
         result.append(node | {
@@ -75,17 +83,17 @@ def node_detail(node_id: str, at: Optional[str] = None) -> dict[str, Any]:
     for link in topo["links"]:
         if link["from"] == node_id:
             for token in link.get("ports", {}).get("from", "").split():
-                allowed_ports.add(token.strip().replace("p", ""))
+                allowed_ports.add(normalize_port(token))
         elif link["to"] == node_id:
             for token in link.get("ports", {}).get("to", "").split():
-                allowed_ports.add(token.strip().replace("p", ""))
+                allowed_ports.add(normalize_port(token))
                 
     ports_map = latest_aggregates(at).get(node_id, {})
     lanes = latest_lanes(node_id, at)
     
     filtered_ports = [
         port for port in ports_map.values()
-        if str(port["port"]).replace("p", "") in allowed_ports
+        if normalize_port(port["port"]) in allowed_ports
     ]
     
     return {

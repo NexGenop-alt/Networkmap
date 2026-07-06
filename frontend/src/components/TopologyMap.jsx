@@ -105,8 +105,10 @@ export function TopologyMap({ topology, nodes, links, selectedIds, onSelectNode 
 }
 
 function LinkPath({ link, from, to }) {
-  const color = LINK_COLORS[link.color] || "#cbd5e1";
+  const baseColor = LINK_COLORS[link.color] || "#cbd5e1";
   const health = link.health || "unknown";
+  // Override the foreground color to be yellow/red if the link is degraded
+  const color = (health === "warning" || health === "critical") ? HEALTH[health] : baseColor;
   const triple = link.color === "black-triple";
   const double = link.color && link.color.endsWith("-double");
   const dashed = link.color === "green-dashed";
@@ -274,7 +276,7 @@ function splitName(name, id) {
     LND: ["LND", "El Cajon"],
     "4MC": ["4MC", "MileOfCars"],
     GST: ["GST", "G-Street"],
-    TNP: ["3NP", "Naples"],
+    "3NP": ["3NP", "Naples"],
     PLD: ["PLD", "P.Ladera"],
     BNA: ["BNA", "Bonita"],
     SRA: ["SRA", "SantaRosa"],
@@ -289,23 +291,14 @@ function MapTitle({ topology }) {
   return (
     <g>
       <text x="1415" y="140" textAnchor="middle" fill="#f8fafc" fontSize="58" fontWeight="900">
-        Cabinet
+        California
       </text>
       <text x="1415" y="212" textAnchor="middle" fill="#f8fafc" fontSize="46" fontWeight="900">
-        Router Topology
+        Node Topology
       </text>
       <text x="1415" y="260" textAnchor="middle" fill="#cbd5e1" fontSize="26">
-        Ciena Router view
+        something else here
       </text>
-      <g transform="translate(1370 420)">
-        <line x1="0" y1="0" x2="60" y2="0" stroke="#d4d4d8" strokeWidth="7" strokeLinecap="round" />
-        <text x="82" y="9" fill="#e2e8f0" fontSize="24">100G</text>
-        <line x1="0" y1="48" x2="60" y2="48" stroke="#b87333" strokeWidth="12" strokeLinecap="round" />
-        <text x="82" y="57" fill="#e2e8f0" fontSize="24">200G</text>
-        <line x1="0" y1="95" x2="60" y2="95" stroke="#f8fafc" strokeWidth="5" strokeLinecap="round" transform="translate(0,-5)" />
-        <line x1="0" y1="95" x2="60" y2="95" stroke="#f8fafc" strokeWidth="5" strokeLinecap="round" transform="translate(0,5)" />
-        <text x="82" y="104" fill="#e2e8f0" fontSize="24">2x100G LAG</text>
-      </g>
     </g>
   );
 }

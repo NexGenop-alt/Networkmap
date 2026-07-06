@@ -44,7 +44,7 @@
       "suffix": "",
       "x": 270,
       "y": 285,
-      "equipment": "MX304 100G-LR",
+      "equipment": "",
       "tier": "peering"
     },
     {
@@ -54,7 +54,7 @@
       "suffix": "8114",
       "x": 470,
       "y": 285,
-      "equipment": "PKT-200-S",
+      "equipment": "",
       "tier": "core"
     },
     {
@@ -64,17 +64,17 @@
       "suffix": "8114",
       "x": 890,
       "y": 285,
-      "equipment": "2x100G",
+      "equipment": "",
       "tier": "core"
     },
     {
       "id": "JNPR_SDG",
       "name": "JNPR MX304",
-      "clli": "SNDJDJM3",
+      "clli": "SNDJCA13",
       "suffix": "",
       "x": 1090,
       "y": 285,
-      "equipment": "MX304, NetSkrt AS53471",
+      "equipment": "",
       "tier": "peering"
     },
     {
@@ -84,7 +84,7 @@
       "suffix": "",
       "x": 270,
       "y": 485,
-      "equipment": "MX304 100G-LR",
+      "equipment": "",
       "tier": "peering"
     },
     {
@@ -94,7 +94,7 @@
       "suffix": "8114",
       "x": 470,
       "y": 485,
-      "equipment": "PKT-200-S",
+      "equipment": "",
       "tier": "core"
     },
     {
@@ -104,7 +104,7 @@
       "suffix": "5164",
       "x": 1120,
       "y": 500,
-      "equipment": "100G-ZR",
+      "equipment": "",
       "tier": "distribution"
     },
     {
@@ -114,7 +114,7 @@
       "suffix": "5164",
       "x": 990,
       "y": 700,
-      "equipment": "100G-ZR, Crown 2024",
+      "equipment": "",
       "tier": "distribution"
     },
     {
@@ -124,7 +124,7 @@
       "suffix": "5164",
       "x": 620,
       "y": 840,
-      "equipment": "PKT-200-L",
+      "equipment": "",
       "tier": "distribution"
     },
     {
@@ -134,17 +134,17 @@
       "suffix": "5164",
       "x": 735,
       "y": 1050,
-      "equipment": "PKT-200-S",
+      "equipment": "",
       "tier": "distribution"
     },
     {
-      "id": "TNP",
+      "id": "3NP",
       "name": "3NP Naples",
       "clli": "CHULCAN1",
       "suffix": "5164",
       "x": 930,
       "y": 1050,
-      "equipment": "PKT-200-S",
+      "equipment": "",
       "tier": "access"
     },
     {
@@ -154,7 +154,7 @@
       "suffix": "5164",
       "x": 1125,
       "y": 1050,
-      "equipment": "100G-LR",
+      "equipment": "",
       "tier": "access"
     },
     {
@@ -164,7 +164,7 @@
       "suffix": "5164",
       "x": 1240,
       "y": 840,
-      "equipment": "100G-LR",
+      "equipment": "",
       "tier": "distribution"
     },
     {
@@ -174,7 +174,7 @@
       "suffix": "5164",
       "x": 1370,
       "y": 1050,
-      "equipment": "100G-LR",
+      "equipment": "",
       "tier": "access"
     },
     {
@@ -184,7 +184,7 @@
       "suffix": "5164",
       "x": 1600,
       "y": 1050,
-      "equipment": "100G-LR",
+      "equipment": "",
       "tier": "access"
     },
     {
@@ -194,7 +194,7 @@
       "suffix": "5164",
       "x": 610,
       "y": 1220,
-      "equipment": "PKT-200-S",
+      "equipment": "",
       "tier": "access"
     },
     {
@@ -204,7 +204,7 @@
       "suffix": "5164",
       "x": 1160,
       "y": 1220,
-      "equipment": "PKT-200-S",
+      "equipment": "",
       "tier": "access"
     }
   ],
@@ -313,7 +313,7 @@
       "to": "GST",
       "speed": "100G",
       "type": "standard",
-      "color": "brown",
+      "color": "blue",
       "ports": {
         "from": "p43",
         "to": "p34"
@@ -418,7 +418,7 @@
     {
       "id": "GST-3NP",
       "from": "GST",
-      "to": "TNP",
+      "to": "3NP",
       "speed": "100G",
       "type": "standard",
       "color": "blue",
@@ -429,7 +429,7 @@
     },
     {
       "id": "3NP-PLD",
-      "from": "TNP",
+      "from": "3NP",
       "to": "PLD",
       "speed": "2x100G",
       "type": "lag",

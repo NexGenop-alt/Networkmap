@@ -7,13 +7,6 @@ Parses output from three Ciena CLI commands per port:
 
 The output format is pipe-delimited key-value tables. Each table has a header
 line like `+--- TABLE NAME ---+` followed by `| KEY | VALUE |` rows.
-
-All three commands are run per port. The raw output is concatenated and passed
-to `parse_port_output()` which returns a single structured dict.
-
-CLI commands (the actual commands were sanitized in the logs but follow this pattern):
-  Device> show et et <port_number>
-  Device> show x x <port_number>
 """
 
 import re
@@ -21,9 +14,21 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
+VENDOR_PN_MAP = {
+    "180-3590-900": "200G SR QSFP-DD",
+    "180-3370-900": "200G LR QSFP-DD",
+    "XCVR-Q10V01": "100G-LR4",
+    "XCVR-Q40V31": "100G-ZR4",
+    "Q28R-LR4-CIE": "100G-LR4",
+    "XCVR-Q30V31": "100G-ER4",
+    "Q28R-ZR4-CIE": "100G-ZR4",
+    "XCVR-D01LR1": "100G-LR1",
+}
+
+
 @dataclass
 class LaneReading:
-    """Optical readings for a single QSFP28 lane (1-4)."""
+    """Optical readings for a single lane."""
     lane_number: int
     rx_power_dbm: Optional[float] = None
     tx_power_dbm: Optional[float] = None
@@ -46,11 +51,28 @@ class LaneReading:
     tx_low_alarm_status: bool = False
     tx_high_warning_status: bool = False
     tx_low_warning_status: bool = False
+    # -- From XCVR DIAGNOSTICS --
+    temperature_c: Optional[float] = None
+    temperature_high_alarm: Optional[float] = None
+    temperature_low_alarm: Optional[float] = None
+    temperature_high_warning: Optional[float] = None
+    temperature_low_warning: Optional[float] = None
+
+    voltage_v: Optional[float] = None
+    voltage_high_alarm: Optional[float] = None
+    voltage_low_alarm: Optional[float] = None
+    voltage_high_warning: Optional[float] = None
+    voltage_low_warning: Optional[float] = None
+
+    power_consumption_w: Optional[float] = None
 
 
 @dataclass
 class PortReading:
     """Complete parsed data for a single port."""
+    # -- Time and Meta --
+    timestamp: Optional[str] = None
+    
     # -- From ETTP table --
     port_number: str = ""
     description: str = ""
@@ -69,29 +91,26 @@ class PortReading:
     # -- From XCVR VENDOR-DATA --
     vendor_serial: str = ""            # e.g. "A40912AE6099"
     vendor_pn: str = ""
-    spec_compliance: str = ""          # e.g. "100GBASE-LR4"
+    spec_compliance: str = ""          # Human readable alias or base spec
     # -- From XCVR DIAGNOSTICS --
     temperature_c: Optional[float] = None
     voltage_v: Optional[float] = None
     power_consumption_w: Optional[float] = None
-    # Per-lane optical data (QSFP28 = 4 lanes)
+    # Per-lane optical data
     lanes: list[LaneReading] = field(default_factory=list)
 
     @property
     def rx_power_avg(self) -> Optional[float]:
-        """Average RX power across all lanes."""
         vals = [l.rx_power_dbm for l in self.lanes if l.rx_power_dbm is not None]
         return round(sum(vals) / len(vals), 2) if vals else None
 
     @property
     def tx_power_avg(self) -> Optional[float]:
-        """Average TX power across all lanes."""
         vals = [l.tx_power_dbm for l in self.lanes if l.tx_power_dbm is not None]
         return round(sum(vals) / len(vals), 2) if vals else None
 
     @property
     def rx_low_alarm_threshold(self) -> Optional[float]:
-        """Use the optic's own low alarm threshold (same across lanes)."""
         for l in self.lanes:
             if l.rx_low_alarm is not None:
                 return l.rx_low_alarm
@@ -99,7 +118,6 @@ class PortReading:
 
     @property
     def rx_low_warning_threshold(self) -> Optional[float]:
-        """Use the optic's own low warning threshold."""
         for l in self.lanes:
             if l.rx_low_warning is not None:
                 return l.rx_low_warning
@@ -107,7 +125,6 @@ class PortReading:
 
     @property
     def has_any_alarm(self) -> bool:
-        """True if any lane has any alarm or warning flag set."""
         for l in self.lanes:
             if any([
                 l.rx_high_alarm_status, l.rx_low_alarm_status,
@@ -120,11 +137,6 @@ class PortReading:
 
 
 def _extract_value(text: str, key_pattern: str) -> Optional[str]:
-    """Extract a value from a pipe-delimited Ciena table row.
-    
-    Matches lines like:
-      |   Some Key Name           | some_value    |
-    """
     pattern = rf'\|\s*{key_pattern}\s*\|\s*(.+?)\s*\|'
     match = re.search(pattern, text, re.IGNORECASE)
     if match:
@@ -134,7 +146,6 @@ def _extract_value(text: str, key_pattern: str) -> Optional[str]:
 
 
 def _extract_float(text: str, key_pattern: str) -> Optional[float]:
-    """Extract a float value from a table row."""
     val = _extract_value(text, key_pattern)
     if val and val != '-':
         try:
@@ -144,43 +155,29 @@ def _extract_float(text: str, key_pattern: str) -> Optional[float]:
     return None
 
 
-def _extract_bool(text: str, key_pattern: str) -> bool:
-    """Extract a boolean status flag (True/False string)."""
-    val = _extract_value(text, key_pattern)
-    return val.lower() == 'true' if val else False
-
-
 def _parse_spec_compliance(text: str) -> str:
-    """Extract just the standard name from the compliance string.
-    
-    Input:  "Extended-Spec-Compliance-100GBASE-LR4"
-    Output: "100GBASE-LR4"
-    """
     val = _extract_value(text, r'Specification Compliance')
     if val:
-        # Strip the "Extended-Spec-Compliance-" prefix if present
         match = re.search(r'(\d+GBASE[-\w]+)', val)
         return match.group(1) if match else val
     return ""
 
+def _safe_float(match: Optional[re.Match]) -> Optional[float]:
+    """Safely convert a regex match to float, ignoring dashes."""
+    if match and match.group(1) != '-':
+        try:
+            return float(match.group(1))
+        except ValueError:
+            return None
+    return None
 
 def parse_port_output(raw_output: str) -> PortReading:
-    """
-    Parse the concatenated output of all CLI commands for a single port.
-    
-    Expected input is the full text from running:
-      show et et <port>
-      show x x <port>
-    
-    The output contains multiple pipe-delimited tables:
-      - ETTP (port config)
-      - ETTP STATE (oper status, uptime)
-      - ETTP STATISTICS (counters)
-      - XCVR DETAILS (admin/oper state, type)
-      - XCVR VENDOR-DATA (serial, spec compliance)
-      - XCVR DIAGNOSTICS (temperature, per-lane TX/RX/bias)
-    """
     reading = PortReading()
+
+    # --- Extract Timestamp ---
+    timestamp_match = re.search(r'\*\*\*\s*(.+?)\s*\*\*\*', raw_output)
+    if timestamp_match:
+        reading.timestamp = timestamp_match.group(1).strip()
 
     # --- ETTP section ---
     reading.port_number = _extract_value(raw_output, r'Name') or ""
@@ -204,137 +201,111 @@ def parse_port_output(raw_output: str) -> PortReading:
 
     # --- XCVR VENDOR-DATA section ---
     reading.vendor_serial = _extract_value(raw_output, r'Vendor Serial Number') or ""
-    reading.vendor_pn = _extract_value(raw_output, r'Vendor PN') or ""
-    reading.spec_compliance = _parse_spec_compliance(raw_output)
+    
+    raw_pn = _extract_value(raw_output, r'Vendor PN') or ""
+    reading.vendor_pn = raw_pn
+    
+    # Map Vendor PN to display alias for the UI, fallback to standard compliance extraction
+    mapped_pn = VENDOR_PN_MAP.get(raw_pn)
+    if mapped_pn:
+        reading.spec_compliance = mapped_pn
+    else:
+        reading.spec_compliance = _parse_spec_compliance(raw_output)
 
     # --- XCVR DIAGNOSTICS section ---
-    reading.temperature_c = _extract_float(raw_output, r'Temperature \(deg C\)\s*\|\s*\|\s*Current')
-    reading.voltage_v = _extract_float(raw_output, r'Voltage \(V\)\s*\|\s*\|\s*Current')
-    reading.power_consumption_w = _extract_float(raw_output, r'Power Consumption \(W\)\s*\|\s*\|\s*Current')
+    
+    # 1. Temperature Block
+    temp_block = re.search(r'Temperature \(deg C\)(.*?)(?=Voltage \(V\)|Power Consumption \(W\)|Rx Power \(dBm\)|\Z)', raw_output, re.DOTALL)
+    if temp_block:
+        tb = temp_block.group(1)
+        reading.temperature_c = _safe_float(re.search(r'Current\s*\|\s*([-\d.]+)', tb))
+        reading.temperature_high_alarm = _safe_float(re.search(r'High Alarm Threshold\s*\|\s*([-\d.]+)', tb))
+        reading.temperature_low_alarm = _safe_float(re.search(r'Low Alarm Threshold\s*\|\s*([-\d.]+)', tb))
+        reading.temperature_high_warning = _safe_float(re.search(r'High Warning Threshold\s*\|\s*([-\d.]+)', tb))
+        reading.temperature_low_warning = _safe_float(re.search(r'Low Warning Threshold\s*\|\s*([-\d.]+)', tb))
 
-    # The temperature/voltage parsing above may fail because the "Current" is on
-    # the NEXT line after the header. Use a different approach: find the section
-    # then grab "Current" value right after it.
-    temp_match = re.search(
-        r'Temperature \(deg C\)\s*\|[^|]*\|\s*\n\s*\|\s*Current\s*\|\s*([-\d.]+)',
-        raw_output
-    )
-    if temp_match:
-        reading.temperature_c = float(temp_match.group(1))
-    else:
-        # Fallback: simpler pattern for single-line layout
-        temp_match2 = re.search(r'Temperature \(deg C\).*?Current\s*\|\s*([-\d.]+)', raw_output, re.DOTALL)
-        if temp_match2:
-            reading.temperature_c = float(temp_match2.group(1))
+    # 2. Voltage Block
+    volt_block = re.search(r'Voltage \(V\)(.*?)(?=Power Consumption \(W\)|Rx Power \(dBm\)|\Z)', raw_output, re.DOTALL)
+    if volt_block:
+        vb = volt_block.group(1)
+        reading.voltage_v = _safe_float(re.search(r'Current\s*\|\s*([-\d.]+)', vb))
+        reading.voltage_high_alarm = _safe_float(re.search(r'High Alarm Threshold\s*\|\s*([-\d.]+)', vb))
+        reading.voltage_low_alarm = _safe_float(re.search(r'Low Alarm Threshold\s*\|\s*([-\d.]+)', vb))
+        reading.voltage_high_warning = _safe_float(re.search(r'High Warning Threshold\s*\|\s*([-\d.]+)', vb))
+        reading.voltage_low_warning = _safe_float(re.search(r'Low Warning Threshold\s*\|\s*([-\d.]+)', vb))
 
-    voltage_match = re.search(r'Voltage \(V\).*?Current\s*\|\s*([-\d.]+)', raw_output, re.DOTALL)
-    if voltage_match:
-        reading.voltage_v = float(voltage_match.group(1))
-
+    # 3. Power Consumption Block
     power_match = re.search(r'Power Consumption \(W\).*?Current\s*\|\s*([-\d.]+)', raw_output, re.DOTALL)
-    if power_match:
-        reading.power_consumption_w = float(power_match.group(1))
+    reading.power_consumption_w = _safe_float(power_match)
 
     # --- Per-lane optical data ---
-    # Split DIAGNOSTICS section into lane blocks.
-    # Each lane starts with "Lane Number | N" and contains RX, TX, and Bias data.
     diag_section = raw_output[raw_output.find('XCVR DIAGNOSTICS'):] if 'XCVR DIAGNOSTICS' in raw_output else ""
     
-    lane_blocks = re.split(r'(?=\|\s*Lane Number\s*\|)', diag_section)
+    # Split by Rx Power to dynamically handle 1, 2, or 4 lane optics without needing Lane Headers
+    parts = re.split(r'Rx Power \(dBm\)', diag_section)
     
-    for block in lane_blocks:
-        lane_num_match = re.search(r'Lane Number\s*\|\s*(\d+)', block)
-        if not lane_num_match:
-            continue
+    lane_index = 1
+    for part in parts[1:]:  # Skip the first split (general diag info)
+        lane = LaneReading(lane_number=lane_index)
         
-        lane = LaneReading(lane_number=int(lane_num_match.group(1)))
+        # Split into RX and TX chunks
+        rx_tx_split = re.split(r'Tx Power \(dBm\)', part)
+        rx_text = rx_tx_split[0]
+        tx_text = rx_tx_split[1] if len(rx_tx_split) > 1 else ""
         
-        # Find RX Power section within this lane block
-        rx_section = re.search(
-            r'Rx Power \(dBm\)(.*?)(?=Tx Power \(dBm\)|Tx Laser Bias|Lane Number|\Z)',
-            block, re.DOTALL
-        )
-        if rx_section:
-            rx_text = rx_section.group(1)
-            current = re.search(r'Current\s*\|\s*([-\d.]+)', rx_text)
-            if current:
-                lane.rx_power_dbm = float(current.group(1))
+        # --- RX Parsing ---
+        current_rx = re.search(r'Current\s*\|\s*([-\d.]+)', rx_text)
+        if current_rx:
+            lane.rx_power_dbm = float(current_rx.group(1))
             
-            # Thresholds
-            ha = re.search(r'High Alarm Threshold\s*\|\s*([-\d.]+)', rx_text)
-            la = re.search(r'Low Alarm Threshold\s*\|\s*([-\d.]+)', rx_text)
-            hw = re.search(r'High Warning Threshold\s*\|\s*([-\d.]+)', rx_text)
-            lw = re.search(r'Low Warning Threshold\s*\|\s*([-\d.]+)', rx_text)
-            if ha: lane.rx_high_alarm = float(ha.group(1))
-            if la: lane.rx_low_alarm = float(la.group(1))
-            if hw: lane.rx_high_warning = float(hw.group(1))
-            if lw: lane.rx_low_warning = float(lw.group(1))
+        ha = re.search(r'High Alarm Threshold\s*\|\s*([-\d.]+)', rx_text)
+        la = re.search(r'Low Alarm Threshold\s*\|\s*([-\d.]+)', rx_text)
+        hw = re.search(r'High Warning Threshold\s*\|\s*([-\d.]+)', rx_text)
+        lw = re.search(r'Low Warning Threshold\s*\|\s*([-\d.]+)', rx_text)
+        if ha: lane.rx_high_alarm = float(ha.group(1))
+        if la: lane.rx_low_alarm = float(la.group(1))
+        if hw: lane.rx_high_warning = float(hw.group(1))
+        if lw: lane.rx_low_warning = float(lw.group(1))
+        
+        lane.rx_high_alarm_status = bool(re.search(r'High Alarm Status\s*\|\s*True', rx_text, re.I))
+        lane.rx_low_alarm_status = bool(re.search(r'Low Alarm Status\s*\|\s*True', rx_text, re.I))
+        lane.rx_high_warning_status = bool(re.search(r'High Warning Status\s*\|\s*True', rx_text, re.I))
+        lane.rx_low_warning_status = bool(re.search(r'Low Warning Status\s*\|\s*True', rx_text, re.I))
+
+        # --- TX Parsing ---
+        # Using re.search automatically halts at the *first* match, ignoring the secondary Laser Temp sets
+        current_tx = re.search(r'Current\s*\|\s*([-\d.]+)', tx_text)
+        if current_tx:
+            lane.tx_power_dbm = float(current_tx.group(1))
             
-            # Status flags
-            lane.rx_high_alarm_status = bool(re.search(r'High Alarm Status\s*\|\s*True', rx_text, re.I))
-            lane.rx_low_alarm_status = bool(re.search(r'Low Alarm Status\s*\|\s*True', rx_text, re.I))
-            lane.rx_high_warning_status = bool(re.search(r'High Warning Status\s*\|\s*True', rx_text, re.I))
-            lane.rx_low_warning_status = bool(re.search(r'Low Warning Status\s*\|\s*True', rx_text, re.I))
+        ha_tx = re.search(r'High Alarm Threshold\s*\|\s*([-\d.]+)', tx_text)
+        la_tx = re.search(r'Low Alarm Threshold\s*\|\s*([-\d.]+)', tx_text)
+        hw_tx = re.search(r'High Warning Threshold\s*\|\s*([-\d.]+)', tx_text)
+        lw_tx = re.search(r'Low Warning Threshold\s*\|\s*([-\d.]+)', tx_text)
+        if ha_tx: lane.tx_high_alarm = float(ha_tx.group(1))
+        if la_tx: lane.tx_low_alarm = float(la_tx.group(1))
+        if hw_tx: lane.tx_high_warning = float(hw_tx.group(1))
+        if lw_tx: lane.tx_low_warning = float(lw_tx.group(1))
 
-        # Find TX Power section within this lane block
-        tx_section = re.search(
-            r'Tx Power \(dBm\)(.*?)(?=Tx Laser Bias|Lane Number|\Z)',
-            block, re.DOTALL
-        )
-        if tx_section:
-            tx_text = tx_section.group(1)
-            current = re.search(r'Current\s*\|\s*([-\d.]+)', tx_text)
-            if current:
-                lane.tx_power_dbm = float(current.group(1))
-            
-            ha = re.search(r'High Alarm Threshold\s*\|\s*([-\d.]+)', tx_text)
-            la = re.search(r'Low Alarm Threshold\s*\|\s*([-\d.]+)', tx_text)
-            hw = re.search(r'High Warning Threshold\s*\|\s*([-\d.]+)', tx_text)
-            lw = re.search(r'Low Warning Threshold\s*\|\s*([-\d.]+)', tx_text)
-            if ha: lane.tx_high_alarm = float(ha.group(1))
-            if la: lane.tx_low_alarm = float(la.group(1))
-            if hw: lane.tx_high_warning = float(hw.group(1))
-            if lw: lane.tx_low_warning = float(lw.group(1))
+        lane.tx_high_alarm_status = bool(re.search(r'High Alarm Status\s*\|\s*True', tx_text, re.I))
+        lane.tx_low_alarm_status = bool(re.search(r'Low Alarm Status\s*\|\s*True', tx_text, re.I))
+        lane.tx_high_warning_status = bool(re.search(r'High Warning Status\s*\|\s*True', tx_text, re.I))
+        lane.tx_low_warning_status = bool(re.search(r'Low Warning Status\s*\|\s*True', tx_text, re.I))
 
-            lane.tx_high_alarm_status = bool(re.search(r'High Alarm Status\s*\|\s*True', tx_text, re.I))
-            lane.tx_low_alarm_status = bool(re.search(r'Low Alarm Status\s*\|\s*True', tx_text, re.I))
-            lane.tx_high_warning_status = bool(re.search(r'High Warning Status\s*\|\s*True', tx_text, re.I))
-            lane.tx_low_warning_status = bool(re.search(r'Low Warning Status\s*\|\s*True', tx_text, re.I))
-
-        # Bias current
-        bias_section = re.search(
-            r'Tx Laser Bias \(mA\)(.*?)(?=Laser Temperature|Lane Number|\Z)',
-            block, re.DOTALL
-        )
-        if bias_section:
-            bias_text = bias_section.group(1)
-            current = re.search(r'Current\s*\|\s*([-\d.]+)', bias_text)
-            if current:
-                lane.tx_laser_bias_ma = float(current.group(1))
+        # Check for bias if present in older models
+        bias = re.search(r'Tx Laser Bias \(mA\).*?Current\s*\|\s*([-\d.]+)', tx_text, re.DOTALL)
+        if bias:
+            lane.tx_laser_bias_ma = float(bias.group(1))
 
         reading.lanes.append(lane)
+        lane_index += 1
 
     return reading
 
 
 # --- SSH command definitions ---
-
-# These are the actual commands to run on each Ciena box.
-# The logs show the prompt pattern: "DeviceName> show <cmd> <cmd> <port>"
-# Command 1 - ETTP (port stats/state):
-ETTP_COMMAND = "show et et {port}"
-# Command 2 - XCVR (transceiver details + vendor + diagnostics):
-XCVR_COMMAND = "show x x {port}"
-
-# Full collection sequence for one port:
-# 1. SSH into the node
-# 2. Run ETTP_COMMAND.format(port=port_number) → capture output
-# 3. Run XCVR_COMMAND.format(port=port_number) → capture output
-# 4. Concatenate both outputs
-# 5. Pass to parse_port_output() → get PortReading
-
-
-# --- Quick validation test ---
+ETTP_COMMAND = 'show ettps ettp {port} | grep "Desc\|Change\|Port\|In Packets\|Out Packets\|Errors\|Crc\|Status\|---"'
+XCVR_COMMAND = 'show xcvrs xcvr {port} | inc "XCVR\|PN\|Serial\|(deg C)\|Current\|(V)\|(W)\|dBm\|Threshold"'
 
 if __name__ == "__main__":
     import sys
@@ -345,6 +316,7 @@ if __name__ == "__main__":
         
         result = parse_port_output(raw)
         
+        print(f"Timestamp: {result.timestamp}")
         print(f"Port: {result.port_number}")
         print(f"Description: {result.description}")
         print(f"Oper Status: {result.oper_status}")
@@ -356,7 +328,7 @@ if __name__ == "__main__":
         print(f"Out Errors: {result.out_errors}")
         print(f"Operational State: {result.operational_state}")
         print(f"Serial: {result.vendor_serial}")
-        print(f"Spec: {result.spec_compliance}")
+        print(f"Mapped Spec: {result.spec_compliance} (Raw PN: {result.vendor_pn})")
         print(f"Temperature: {result.temperature_c} °C")
         print(f"Voltage: {result.voltage_v} V")
         print(f"Power: {result.power_consumption_w} W")
@@ -364,6 +336,7 @@ if __name__ == "__main__":
         for lane in result.lanes:
             print(f"  Lane {lane.lane_number}: RX={lane.rx_power_dbm} dBm, TX={lane.tx_power_dbm} dBm, Bias={lane.tx_laser_bias_ma} mA")
             print(f"    RX Thresholds: alarm=[{lane.rx_low_alarm}, {lane.rx_high_alarm}] warning=[{lane.rx_low_warning}, {lane.rx_high_warning}]")
+            print(f"    TX Thresholds: alarm=[{lane.tx_low_alarm}, {lane.tx_high_alarm}] warning=[{lane.tx_low_warning}, {lane.tx_high_warning}]")
         print(f"Average RX: {result.rx_power_avg} dBm")
         print(f"Average TX: {result.tx_power_avg} dBm")
         print(f"Any alarms: {result.has_any_alarm}")
@@ -371,4 +344,3 @@ if __name__ == "__main__":
         print(f"Optic Low Warning Threshold: {result.rx_low_warning_threshold} dBm")
     else:
         print("Usage: python ciena_parser.py <logfile>")
-        print("  Parses a Ciena CLI log file and prints extracted data.")

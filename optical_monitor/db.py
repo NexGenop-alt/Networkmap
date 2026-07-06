@@ -45,6 +45,11 @@ def init_db(path: Path | None = None) -> None:
     with connect(path) as conn:
         conn.executescript(
             """
+            CREATE TABLE IF NOT EXISTS processed_logs (
+                filepath TEXT PRIMARY KEY,
+                processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
             CREATE TABLE IF NOT EXISTS nodes (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -239,7 +244,7 @@ def insert_port_reading(
 def _insert_row(conn: sqlite3.Connection, row: dict[str, Any]) -> None:
     conn.execute(
         """
-        INSERT INTO optical_readings (
+        INSERT OR IGNORE INTO optical_readings (
             timestamp, node_id, port, lane, rx_dbm, tx_dbm, tx_bias_ma, temperature_c,
             rx_low_alarm, rx_low_warning, oper_status, in_crc_errors, in_errors,
             out_discards, out_errors, description, uptime, port_speed, operational_state,
@@ -279,3 +284,20 @@ def set_collector_status(mode: str, ok: bool, error: str | None = None) -> None:
                 "ok": 1 if ok else 0,
             },
         )
+
+
+def is_file_processed(conn, filepath: str) -> bool:
+    """Check if a log file has already been ingested."""
+    row = conn.execute(
+        "SELECT 1 FROM processed_logs WHERE filepath = ?", 
+        (filepath,)
+    ).fetchone()
+    return row is not None
+
+def mark_file_processed(conn, filepath: str) -> None:
+    """Record a file as fully ingested."""
+    conn.execute(
+        "INSERT OR IGNORE INTO processed_logs (filepath) VALUES (?)", 
+        (filepath,)
+    )
+    conn.commit()
